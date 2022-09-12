@@ -1,0 +1,36 @@
+---
+- name: "Grab servers Info"
+  hosts: localhost
+  become: true
+  tasks: 
+    - name: "Get usr list"
+      getent:
+        database: passwd
+    - name: "Get ports"
+      listen_ports_facts:
+    - name: "System services"
+      service_facts:
+    - name: "Get cron jobs"
+      shell:  | 
+        echo "tasks in /etc/crontab:"
+        egrep -v '^#|^$|^[[:alpha:]]' /etc/crontab
+        echo "tasks in /etc/cron.d:"
+        cat /etc/cron.d/* | egrep -v '^#|^$|^[[:alpha:]]'
+        echo "users tasks:"
+        for user in $(getent passwd | cut -f1 -d: )
+            do
+              if crontab -u $user -l &>/dev/null
+              then echo $user:
+              crontab -u $user -l 2>/dev/null | grep -v '^#'
+              fi
+            done
+      args:
+        warn: no  
+      register: cronjobs
+    - name: "Inventory of hosts"
+      template: 
+        src: hostinfo.jinja2
+        dest: /var/tmp/host.info
+        owner: root
+        group: root
+        mode: 0660
