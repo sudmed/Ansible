@@ -1,0 +1,65 @@
+HOSTNAME: {{ ansible_facts.hostname }}
+OS: {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version}}
+KERNEL: {{ ansible_facts.kernel }} 
+IPv4: 
+{% for ip4 in ansible_facts.all_ipv4_addresses %}
+{{ ip4 }}
+{% endfor %}
+IPv6: 
+{% for ip6 in ansible_facts.all_ipv6_addresses %}
+{{ ip6 }}
+{% endfor %}
+SYSTEMCTL: 
+{% for service in ansible_facts.services %}
+name: {{ ansible_facts.services[service]['name'] }} status: {{ ansible_facts.services[service]['status'] }}
+{% endfor %}
+CPU: {{ ansible_facts.processor[2] }}
+cores: {{ ansible_facts.processor_cores}} 
+threads per core: {{ ansible_facts.processor_threads_per_core }}
+RAM: 
+total {{ ansible_facts.memory_mb.real.total }}
+free  {{ ansible_facts.memory_mb.real.free }}
+used  {{ ansible_facts.memory_mb.real.used  }}
+HDD:
+{% for device in ansible_facts.devices %}
+name: {{ device }}
+{% for partition in ansible_facts.devices[device].partitions %}
+        partition:{{ partition }}
+        sectors: {{ ansible_facts.devices[device].partitions[partition]['sectors'] }}
+        sectorsize: {{ ansible_facts.devices[device].partitions[partition]['sectorsize'] }}
+        size: {{ ansible_facts.devices[device].partitions[partition]['size'] }}
+        uuid: {{ ansible_facts.devices[device].partitions[partition]['uuid'] }}
+{% endfor %}
+{% endfor %}
+MOUNTS:
+{% for mnt in ansible_facts.mounts %}
+{% set count = loop.index - 1 %}
+mount{{ loop.index }}:
+        mount_path:{{ ansible_facts.mounts[count].mount }}
+        device: {{ ansible_facts.mounts[count].device }}
+        options: {{ ansible_facts.mounts[count].options }}
+        size_available: {{ ansible_facts.mounts[count].size_available }}
+        size_total: {{ ansible_facts.mounts[count].size_total }}
+        uuid: {{ ansible_facts.mounts[count].uuid }}
+{% endfor %}
+PORTS:
+__TCP:
+{% for tcpport in tcp_listen %}
+{% set count = loop.index - 1 %}
+service: {{ tcp_listen[count].name }} Port: {{ tcp_listen[count].port }} address:{{ tcp_listen[count].address }}
+{% endfor %}
+__UDP:
+{% for udpport in udp_listen %}
+{% set count = loop.index - 1 %}
+service: {{ udp_listen[count].name }} Port: {{ udp_listen[count].port }} address:{{ udp_listen[count].address }}
+{% endfor %}
+USER_WITH_SHELL: 
+{% for user in getent_passwd %}
+{% if getent_passwd[user][5] == "/bin/bash" %}
+{{ user }}: {{ getent_passwd[user][5] }}
+{% endif %}
+{% endfor %}
+CRON_JOBS:
+{% for line in cronjobs.stdout_lines %}
+{{ line }}
+{% endfor %}
