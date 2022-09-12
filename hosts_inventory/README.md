@@ -1,7 +1,7 @@
 # Hosts inventory
 
-### The task: create a playbook that performs an inventory of hosts and uploading information to a file /var/tmp/host.info
-### The template looks like:
+#### The task: create a playbook that performs an inventory of hosts and uploading information to a file /var/tmp/host.info
+#### The template looks like:
 
 ```yaml
 HOSTNAME:
